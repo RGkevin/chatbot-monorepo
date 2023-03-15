@@ -1,15 +1,16 @@
 {
-  "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "npmScope": "chatbot",
-  "affected": {
-    "defaultBase": "main"
-  },
   "implicitDependencies": {
     "package.json": {
       "dependencies": "*",
       "devDependencies": "*"
     },
     ".eslintrc.json": "*"
+  },
+  "npmScope": "chatbot",
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"]
+    }
   },
   "tasksRunnerOptions": {
     "default": {
@@ -19,10 +20,8 @@
       }
     }
   },
-  "targetDefaults": {
-    "build": {
-      "dependsOn": ["^build"]
-    }
+  "affected": {
+    "defaultBase": "main"
   },
   "generators": {
     "@nrwl/react": {

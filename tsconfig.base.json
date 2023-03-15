@@ -15,6 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@chatbot/api-client": ["libs/api-client/src/index.ts"],
       "@chatbot/models": ["libs/models/src/index.ts"]
     }
   },
