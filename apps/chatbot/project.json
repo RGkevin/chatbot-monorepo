@@ -1,4 +1,5 @@
 {
+  "name": "chatbot",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/chatbot",
   "projectType": "application",
@@ -23,7 +24,8 @@
       "defaultConfiguration": "development",
       "options": {
         "buildTarget": "chatbot:build",
-        "dev": true
+        "dev": true,
+        "proxyConfig": "apps/chatbot/proxy.conf.json"
       },
       "configurations": {
         "development": {

@@ -2,6 +2,8 @@
   "$schema": "./node_modules/nx/schemas/workspace-schema.json",
   "version": 2,
   "projects": {
+    "api": "apps/api",
+    "api-e2e": "apps/api-e2e",
     "chatbot": "apps/chatbot",
     "chatbot-e2e": "apps/chatbot-e2e",
     "models": "libs/models"
