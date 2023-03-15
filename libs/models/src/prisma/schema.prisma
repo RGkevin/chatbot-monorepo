@@ -1,0 +1,56 @@
+datasource db {
+  url      = env("DATABASE_URL")
+  provider = "postgres"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  name      String
+  role      Role     @default(USER)
+
+  username  String?
+  password  String?
+
+  chats     Chat[]
+  messages  Message[]
+}
+
+model Chat {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  room   String
+
+  user    User  @relation(fields: [userId], references: [id])
+  userId  Int
+
+  messages  Message[]
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  content String
+
+  chat    Chat @relation(fields: [chatId], references: [id])
+  chatId  Int
+
+  // if null then the message is from chatbot
+  user    User?  @relation(fields: [userId], references: [id])
+  userId  Int?
+}
+
+enum Role {
+  USER
+  ADMIN
+}

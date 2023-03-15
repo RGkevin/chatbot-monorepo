@@ -3,6 +3,7 @@
   "version": 2,
   "projects": {
     "chatbot": "apps/chatbot",
-    "chatbot-e2e": "apps/chatbot-e2e"
+    "chatbot-e2e": "apps/chatbot-e2e",
+    "models": "libs/models"
   }
 }

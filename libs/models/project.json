@@ -1,0 +1,44 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/models/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/models/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/libs/models"],
+      "options": {
+        "jestConfig": "libs/models/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "push": {
+      "builder": "@nrwl/workspace:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "yarn prisma db push --schema ./libs/models/src/prisma/schema.prisma"
+      }
+    },
+    "migrate": {
+      "builder": "@nrwl/workspace:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "yarn prisma migrate --schema ./libs/models/src/prisma/schema.prisma"
+      }
+    },
+    "gen-client": {
+      "builder": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "yarn prisma generate --schema ./libs/models/src/prisma/schema.prisma"
+      }
+    }
+  },
+  "tags": []
+}
