@@ -1,4 +1,6 @@
+import { createChat, parseHost } from '@chatbot/api-client';
 import styles from './index.module.css';
+import { parseBody } from '../../utils/parse-body';
 
 /* eslint-disable-next-line */
 export interface ChatProps {}
@@ -12,16 +14,18 @@ export function Chat(props: ChatProps) {
   );
 }
 
-export async function getStaticProps() {
-  // Get external data from the file system, API, DB, etc.
-  const chat = { foo: 'bar' };
+export async function getServerSideProps(context) {
+  const host = parseHost(context.req);
+  const formJson = await parseBody(context.req);
+  const name = formJson['name'];
+  const newChat = await createChat(host, name);
+  // if (context.req.method === 'POST') {}
 
-  // The value of the `props` key will be
-  //  passed to the `Home` component
   return {
     props: {
-      chat,
+      chat: newChat.toPlain(),
     },
   };
 }
+
 export default Chat;
