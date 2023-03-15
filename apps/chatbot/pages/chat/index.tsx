@@ -1,11 +1,32 @@
 import { createChat, parseHost } from '@chatbot/api-client';
 import styles from './index.module.css';
 import { parseBody } from '../../utils/parse-body';
+import { io } from 'socket.io-client';
+import { useEffect, useRef } from 'react';
 
 /* eslint-disable-next-line */
 export interface ChatProps {}
 
 export function Chat(props: ChatProps) {
+  const socketRef = useRef(null);
+
+  useEffect(() => {
+    if (window) {
+      console.log('will connect socket', window.location.origin + '/bot');
+      // socketRef.current = io(window.location.origin + '/bot');
+      socketRef.current = io('http://localhost:5555');
+
+      // client-side
+      socketRef.current.on('connect', () => {
+        console.log('connect', socketRef.current.id); // x8WIv7-mJelg7on_ALbx
+      });
+
+      socketRef.current.on('disconnect', () => {
+        console.log('disconnect', socketRef.current.id); // undefined
+      });
+    }
+  }, []);
+
   return (
     <div className={styles['container']}>
       <h1>Welcome to Chat!</h1>
@@ -18,8 +39,8 @@ export async function getServerSideProps(context) {
   const host = parseHost(context.req);
   const formJson = await parseBody(context.req);
   const name = formJson['name'];
-  const newChat = await createChat(host, name);
-  // if (context.req.method === 'POST') {}
+  const newChat = await createChat(host + '/bot-api', name);
+  // if (context.req.method !== 'POST') {}
 
   return {
     props: {

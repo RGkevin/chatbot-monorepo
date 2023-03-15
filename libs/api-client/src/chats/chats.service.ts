@@ -1,10 +1,10 @@
 import { ChatModel } from './chat.model';
 
 export const createChat = async (
-  host: string,
+  baseUrl: string,
   name: string
 ): Promise<ChatModel> => {
-  const res = await fetch(host + '/api/chats', {
+  const res = await fetch(baseUrl + '/chats', {
     body: JSON.stringify({ name }),
     headers: {
       'Content-Type': 'application/json',
