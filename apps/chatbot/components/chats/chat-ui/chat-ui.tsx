@@ -17,10 +17,6 @@ export function ChatUI({ socket, chat }: ChatUIProps) {
 
   const [messages, setMessages] = useState<MessageModel[]>([]);
 
-  const startAction = useCallback(() => {
-    socket.emit('start', chat.toPlain());
-  }, [chat, socket]);
-
   const onFormSubmit = useCallback(
     (event) => {
       event.preventDefault();
@@ -47,7 +43,8 @@ export function ChatUI({ socket, chat }: ChatUIProps) {
   const onServerMsg = useCallback(
     (plainMsg: Record<string, unknown>) => {
       const serverMsg = MessageModel.fromPlain(plainMsg);
-      console.log('onserver', serverMsg);
+      console.log('onServerMsg.msg', serverMsg);
+
       setMessages([...messages, serverMsg]);
     },
     [messages]
@@ -59,17 +56,17 @@ export function ChatUI({ socket, chat }: ChatUIProps) {
         console.log('on:connect', socket.id);
 
         // start
-        startAction();
+        socket.emit('setup:room', chat.toPlain());
       });
 
       socket.on('disconnect', () => {
-        console.log('disconnect', socket.id);
+        console.log('on:disconnect', socket.id);
       });
 
       // set server msg handler
       socket.on('server:msg', onServerMsg);
     }
-  }, [onServerMsg, socket, startAction]);
+  }, [chat, onServerMsg, socket]);
 
   return (
     <div className={styles['container']}>
