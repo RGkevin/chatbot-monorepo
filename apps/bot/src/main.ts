@@ -1,6 +1,8 @@
 import { Server } from 'socket.io';
 import http from 'http';
 import * as process from 'process';
+import { ChatModel, MessageModel } from '@chatbot/api-client';
+import { findUserById } from '../../../libs/api-client/src/auth/auth.service';
 
 const chatBotServer = http.createServer();
 
@@ -12,10 +14,32 @@ const io = new Server(chatBotServer, {
 });
 
 io.on('connection', (socket) => {
-  console.log('a user connected');
+  let chatModel;
+  console.log('on:connection');
+
+  socket.on('start', async (plainChat) => {
+    chatModel = ChatModel.fromPlain(plainChat);
+
+    // join to room
+    socket.join(chatModel.room);
+
+    // load and verify plainChat
+    const user = await findUserById(chatModel.userId);
+
+    // TODO: bot logic here
+    // start conversation
+    const msgToSend = MessageModel.fromPlain({
+      userId: chatModel.userId,
+      chatId: chatModel.id,
+      content: `Hi ${user.name}, welcome to this Chat! How can I help you?`,
+    });
+
+    // init bot
+    socket.emit('server:msg', msgToSend.toPlain());
+  });
 
   socket.on('disconnect', () => {
-    console.log('user disconnected');
+    console.log('on:disconnect');
   });
 });
 

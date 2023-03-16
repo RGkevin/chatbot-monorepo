@@ -1,14 +1,16 @@
 import { plainToInstance, instanceToPlain } from 'class-transformer';
 
-export class UserModel {
+export class MessageModel {
   id?: number;
   createdAt?: string;
   updatedAt?: string;
-  name: string;
-  role: string;
+  content: string;
+  userId: number;
+
+  chatId: number;
 
   static fromPlain(plain: unknown) {
-    return plainToInstance(UserModel, plain);
+    return plainToInstance(MessageModel, plain);
   }
 
   toPlain() {
