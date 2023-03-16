@@ -9,6 +9,7 @@ import http from 'http';
 import process from 'process';
 import { ChatBotService } from './chatbot.service';
 import { messagesStore } from '../store';
+import { API_SERVER } from '../constants';
 
 export class ChatBotSocket {
   constructor(io: Server, httpServer: http.Server) {
@@ -60,7 +61,8 @@ export class ChatBotSocket {
 
     // join room
     if (!this.socket.rooms.has(this.chat.room)) {
-      this.user = await findUserById(this.chat.userId);
+      this.user = await findUserById(API_SERVER, this.chat.userId);
+
       console.log('ChatBotSocket.onSetupRoom', this.user.name, this.chat.room);
       this.socket.join(this.chat.room);
 
