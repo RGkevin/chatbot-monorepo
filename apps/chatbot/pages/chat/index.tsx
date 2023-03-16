@@ -3,18 +3,20 @@ import styles from './index.module.css';
 import { parseBody } from '../../utils/parse-body';
 import { io } from 'socket.io-client';
 import { useEffect, useRef } from 'react';
+import { BOT_SERVER } from '../../constants';
 
 /* eslint-disable-next-line */
-export interface ChatProps {}
+export interface ChatProps {
+  chat: Record<string, unknown>;
+  botServer: string;
+}
 
 export function Chat(props: ChatProps) {
   const socketRef = useRef(null);
 
   useEffect(() => {
     if (window) {
-      console.log('will connect socket', window.location.origin + '/bot');
-      // socketRef.current = io(window.location.origin + '/bot');
-      socketRef.current = io('http://localhost:5555');
+      socketRef.current = io(props.botServer);
 
       // client-side
       socketRef.current.on('connect', () => {
@@ -25,7 +27,7 @@ export function Chat(props: ChatProps) {
         console.log('disconnect', socketRef.current.id); // undefined
       });
     }
-  }, []);
+  }, [props.botServer]);
 
   return (
     <div className={styles['container']}>
@@ -45,6 +47,7 @@ export async function getServerSideProps(context) {
   return {
     props: {
       chat: newChat.toPlain(),
+      botServer: BOT_SERVER,
     },
   };
 }

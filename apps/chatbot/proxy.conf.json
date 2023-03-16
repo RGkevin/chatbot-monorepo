@@ -2,9 +2,5 @@
   "/bot-api": {
     "target": "http://localhost:3333",
     "secure": false
-  },
-  "/bot": {
-    "target": "http://localhost:5555",
-    "secure": false
   }
 }
