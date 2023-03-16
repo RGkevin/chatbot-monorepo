@@ -1,25 +1,51 @@
 import { GeneratorType, MessageGeneratorModel } from '../models';
 import { MessageModel } from '@chatbot/api-client';
+import { messagesStore } from '../store';
 
 export class ChatBotService {
-  constructor() {
-    // set default generators
-    this.generators = this.getDefaultGenerators();
-  }
-
-  generators: MessageGeneratorModel[];
-
-  getDefaultGenerators() {
-    const gens = [];
-    for (const genTypeMember in GeneratorType) {
-      console.log('enum member: ', GeneratorType[genTypeMember]);
-      // TODO how to organize generators
-      gens.push(new MessageGeneratorModel('foo'));
-    }
-    return [];
-  }
-
   async getOutput(input: MessageModel): Promise<string> {
-    return 'hola output prueba' + input.content;
+    const selectedGenerator = this.selectGenerator(input);
+
+    return selectedGenerator.toContent();
+  }
+
+  selectGenerator(input: MessageModel): MessageGeneratorModel {
+    const highestGenerator = this.highestGenerator(input.content);
+    const selectedGenerator =
+      highestGenerator[0] === 0
+        ? messagesStore[1]
+        : messagesStore[highestGenerator[0]];
+    console.log('ChatBotService.selectGenerator', selectedGenerator);
+
+    return selectedGenerator;
+  }
+
+  matchesWithGenerators(content: string): [number, number][] {
+    const offset = 2;
+
+    return messagesStore
+      .slice(offset)
+      .reduce(
+        (prev, currentGenerator, currentIndex) =>
+          prev.concat([
+            [currentIndex + offset, currentGenerator.match(content).length],
+          ]),
+        []
+      );
+  }
+
+  highestGenerator(content: string): [number, number] {
+    const generatorsMatches = this.matchesWithGenerators(content);
+    console.log(
+      'ChatBotService.highestGenerator.generatorsMatches',
+      generatorsMatches
+    );
+
+    return generatorsMatches.reduce(
+      (prev, current) => {
+        return current[1] > prev[1] ? current : prev;
+      },
+      [0, 0]
+    );
   }
 }

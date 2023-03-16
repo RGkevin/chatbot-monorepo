@@ -8,6 +8,7 @@ import {
 import http from 'http';
 import process from 'process';
 import { ChatBotService } from './chatbot.service';
+import { messagesStore } from '../store';
 
 export class ChatBotSocket {
   constructor(io: Server, httpServer: http.Server) {
@@ -93,9 +94,8 @@ export class ChatBotSocket {
 
   async init() {
     // start conversation
-    await this.sendMsg(
-      `Hi ${this.user.name}, welcome to this Chat! How can I help you?`
-    );
+    const greetingsGenerator = messagesStore[0];
+    await this.sendMsg(greetingsGenerator.toContent(this.user.name));
   }
 
   disconnect() {
