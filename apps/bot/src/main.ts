@@ -35,15 +35,15 @@ io.on('connection', (socket) => {
     });
 
     // init bot
-    socket.emit('server:msg', msgToSend.toPlain());
+    io.to(chatModel.room).emit('server:msg', msgToSend.toPlain());
   });
 
   socket.on('user:msg', async (plainMessage) => {
     const msgModel = MessageModel.fromPlain(plainMessage);
 
-    console.log('on:user:msg', msgModel);
-    // temp response with the same message
-    socket.to(chatModel.room).emit('server:msg', plainMessage);
+    console.log('on:user:msg', msgModel.content, chatModel.room);
+    // TODO temp response with the same message
+    io.to(chatModel.room).emit('server:msg', plainMessage);
   });
 
   socket.on('disconnect', () => {

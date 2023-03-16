@@ -1,127 +1,56 @@
-import {
-  ChatModel,
-  createChat,
-  MessageModel,
-  parseHost,
-} from '@chatbot/api-client';
+import { ChatModel, createChat, parseHost } from '@chatbot/api-client';
 import styles from './index.module.css';
 import { parseBody } from '../../utils/parse-body';
-import { io } from 'socket.io-client';
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
+import { useCallback, useEffect, useState } from 'react';
 import { BOT_SERVER } from '../../constants';
+import ChatUI from '../../components/chats/chat-ui/chat-ui';
 
 /* eslint-disable-next-line */
 export interface ChatProps {
-  chat: Record<string, unknown>;
+  plainChat: Record<string, unknown>;
   botServer: string;
 }
 
-export function Chat(props: ChatProps) {
-  const socketRef = useRef(null);
-  const messages = useState<MessageModel[]>([]);
-  const chatModel = ChatModel.fromPlain(props.chat);
+export default function Chat({ botServer, plainChat }: ChatProps) {
+  const chat = ChatModel.fromPlain(plainChat);
 
-  const startAction = useCallback(() => {
-    socketRef.current.emit('start', chatModel.toPlain());
-  }, [chatModel]);
-
-  const onServerMsg = useCallback((plainMsg: Record<string, unknown>) => {
-    const serverMsg = MessageModel.fromPlain(plainMsg);
-
-    console.log('server message: ', serverMsg);
-  }, []);
-
-  const sendMsgAction = useCallback(
-    (content: string) => {
-      const newMessage = MessageModel.fromPlain({
-        content,
-        userId: chatModel.userId,
-        chatId: chatModel.id,
-      });
-
-      // business logic here
-
-      // send message to bot server
-      socketRef.current.emit('user:msg', newMessage.toPlain());
-    },
-    [chatModel.id, chatModel.userId]
-  );
-
-  const [content, setContent] = useState('');
-
-  const onFormSubmit = useCallback(
-    (event) => {
-      event.preventDefault();
-      console.log('submit');
-      sendMsgAction(content);
-    },
-    [content, sendMsgAction]
-  );
+  const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    if (window) {
-      socketRef.current = io(props.botServer);
-
-      // client-side
-      socketRef.current.on('connect', () => {
-        console.log('on:connect', socketRef.current.id);
-
-        // start
-        startAction();
-      });
-
-      socketRef.current.on('disconnect', () => {
-        console.log('disconnect', socketRef.current.id); // undefined
-      });
-
-      // set handler
-      socketRef.current.on('server:msg', onServerMsg);
+    if (window && !socket) {
+      const newSocket = io(botServer);
+      setSocket(newSocket);
     }
-  }, [onServerMsg, props.botServer, startAction]);
 
-  const setContentEvent = useCallback((event) => {
-    const value = event.target.value;
-    console.log('value', value);
-    setContent(value);
-  }, []);
+    return () => {
+      socket && socket.disconnect();
+    };
+  }, [botServer, socket]);
 
   return (
     <div className={styles['container']}>
       <h1>Welcome to Chat!</h1>
-      <code>{JSON.stringify(props)}</code>
-      <ul>
-        <li>messages</li>
-      </ul>
-      <form onSubmit={onFormSubmit}>
-        <p>
-          <label htmlFor="content">Message</label>
-          <input
-            type="text"
-            value={content}
-            onChange={setContentEvent}
-            id="content"
-            name="content"
-          />
-        </p>
-        <button type="submit">Send</button>
-      </form>
+      {socket && <ChatUI chat={chat} socket={socket} />}
     </div>
   );
 }
 
-export async function getServerSideProps(context) {
-  const host = parseHost(context.req);
-  const formJson = await parseBody(context.req);
-  const name = formJson['name'];
-  const newChat = await createChat(host + '/bot-api', name);
-  // if (context.req.method !== 'POST') {}
+export async function getServerSideProps({ req, res }) {
+  if (req.method !== 'POST') {
+    res.redirect('/');
+  }
 
+  const formJson = await parseBody(req);
+  const name = formJson['name'];
+
+  const host = parseHost(req);
+  const newChat = await createChat(host + '/bot-api', name);
+  console.log('newChat', newChat.toPlain());
   return {
     props: {
-      chat: newChat.toPlain(),
+      plainChat: newChat.toPlain(),
       botServer: BOT_SERVER,
     },
   };
 }
-
-export default Chat;
