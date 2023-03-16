@@ -42,9 +42,20 @@ export function Chat(props: ChatProps) {
       // business logic here
 
       // send message to bot server
-      socketRef.current.emit('client:msg', newMessage.toPlain());
+      socketRef.current.emit('user:msg', newMessage.toPlain());
     },
     [chatModel.id, chatModel.userId]
+  );
+
+  const [content, setContent] = useState('');
+
+  const onFormSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      console.log('submit');
+      sendMsgAction(content);
+    },
+    [content, sendMsgAction]
   );
 
   useEffect(() => {
@@ -68,6 +79,12 @@ export function Chat(props: ChatProps) {
     }
   }, [onServerMsg, props.botServer, startAction]);
 
+  const setContentEvent = useCallback((event) => {
+    const value = event.target.value;
+    console.log('value', value);
+    setContent(value);
+  }, []);
+
   return (
     <div className={styles['container']}>
       <h1>Welcome to Chat!</h1>
@@ -75,6 +92,19 @@ export function Chat(props: ChatProps) {
       <ul>
         <li>messages</li>
       </ul>
+      <form onSubmit={onFormSubmit}>
+        <p>
+          <label htmlFor="content">Message</label>
+          <input
+            type="text"
+            value={content}
+            onChange={setContentEvent}
+            id="content"
+            name="content"
+          />
+        </p>
+        <button type="submit">Send</button>
+      </form>
     </div>
   );
 }

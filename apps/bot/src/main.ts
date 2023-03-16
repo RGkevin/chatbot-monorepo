@@ -38,6 +38,14 @@ io.on('connection', (socket) => {
     socket.emit('server:msg', msgToSend.toPlain());
   });
 
+  socket.on('user:msg', async (plainMessage) => {
+    const msgModel = MessageModel.fromPlain(plainMessage);
+
+    console.log('on:user:msg', msgModel);
+    // temp response with the same message
+    socket.to(chatModel.room).emit('server:msg', plainMessage);
+  });
+
   socket.on('disconnect', () => {
     console.log('on:disconnect');
   });
