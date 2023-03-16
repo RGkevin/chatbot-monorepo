@@ -73,7 +73,15 @@ export function ChatUI({ socket, chat }: ChatUIProps) {
       <h1>Welcome to ChatUI!</h1>
       <ul>
         {messages.map((msg, i) => (
-          <li key={i}>{msg.content}</li>
+          <li
+            key={i}
+            style={{
+              backgroundColor: msg.isFromBot() ? 'black' : 'white',
+              color: !msg.isFromBot() ? 'black' : 'white',
+            }}
+          >
+            {msg.content}
+          </li>
         ))}
       </ul>
       <form onSubmit={onFormSubmit}>

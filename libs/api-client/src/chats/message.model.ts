@@ -5,7 +5,7 @@ export class MessageModel {
   createdAt?: string;
   updatedAt?: string;
   content: string;
-  userId: number;
+  userId?: number;
 
   chatId: number;
 
@@ -15,5 +15,9 @@ export class MessageModel {
 
   toPlain() {
     return instanceToPlain(this);
+  }
+
+  isFromBot() {
+    return !!this.userId;
   }
 }

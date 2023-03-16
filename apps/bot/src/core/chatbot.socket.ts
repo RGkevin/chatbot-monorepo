@@ -7,15 +7,18 @@ import {
 } from '@chatbot/api-client';
 import http from 'http';
 import process from 'process';
+import { ChatBotService } from './chatbot.service';
 
 export class ChatBotSocket {
   constructor(io: Server, httpServer: http.Server) {
     this.io = io;
     this.httpServer = httpServer;
+    this.service = new ChatBotService();
 
     this.setup();
   }
 
+  private service: ChatBotService;
   public httpServer: http.Server;
   public io: Server;
   public chat?: ChatModel;
@@ -68,9 +71,14 @@ export class ChatBotSocket {
       );
     }
   }
-  onUserMsg(plainMessage: Record<string, unknown>) {
-    const msg = MessageModel.fromPlain(plainMessage);
-    console.log('ChatBotSocket.onUserMsg', msg);
+
+  async onUserMsg(plainMessage: Record<string, unknown>) {
+    const userMsg = MessageModel.fromPlain(plainMessage);
+    console.log('ChatBotSocket.onUserMsg', userMsg);
+
+    // get Bot output
+    const output = await this.service.getOutput(userMsg);
+    await this.sendMsg(output);
   }
 
   async sendMsg(content: string) {
@@ -82,6 +90,7 @@ export class ChatBotSocket {
 
     this.io.to(this.chat.room).emit('server:msg', msgToSend.toPlain());
   }
+
   async init() {
     // start conversation
     await this.sendMsg(
