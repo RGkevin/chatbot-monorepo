@@ -1,27 +1,31 @@
 import { GeneratorType, MessageGeneratorModel } from '../models';
-import { MessageModel } from '@chatbot/api-client';
+import { ChatModel, MessageModel, UserModel } from '@chatbot/api-client';
 import { messagesStore } from '../store';
 
 export class ChatBotService {
-  async getOutput(input: MessageModel): Promise<string> {
-    const selectedGenerator = this.selectGenerator(input);
+  async getOutput(
+    inputMsg: MessageModel,
+    chat: ChatModel,
+    user: UserModel
+  ): Promise<string> {
+    const selectedGenerator = this.selectGenerator(inputMsg);
 
-    return selectedGenerator.toContent();
+    return selectedGenerator.toContent({
+      chat,
+      user,
+    });
   }
 
   selectGenerator(input: MessageModel): MessageGeneratorModel {
     const highestGenerator = this.highestGenerator(input.content);
-    const selectedGenerator =
-      highestGenerator[0] === 0
-        ? messagesStore[1]
-        : messagesStore[highestGenerator[0]];
+    const selectedGenerator = messagesStore[highestGenerator[0]];
     console.log('ChatBotService.selectGenerator', selectedGenerator);
 
     return selectedGenerator;
   }
 
   matchesWithGenerators(content: string): [number, number][] {
-    const offset = 2;
+    const offset = 1;
 
     return messagesStore
       .slice(offset)

@@ -80,7 +80,7 @@ export class ChatBotSocket {
     console.log('ChatBotSocket.onUserMsg', userMsg);
 
     // get Bot output
-    const output = await this.service.getOutput(userMsg);
+    const output = await this.service.getOutput(userMsg, this.chat, this.user);
     await this.sendMsg(output);
   }
 
@@ -96,8 +96,13 @@ export class ChatBotSocket {
 
   async init() {
     // start conversation
-    const greetingsGenerator = messagesStore[0];
-    await this.sendMsg(greetingsGenerator.toContent(this.user.name));
+    const greetingsGenerator = messagesStore[1];
+    await this.sendMsg(
+      greetingsGenerator.toContent({
+        chat: this.chat,
+        user: this.user,
+      })
+    );
   }
 
   disconnect() {
