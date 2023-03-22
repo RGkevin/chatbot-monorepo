@@ -42,6 +42,11 @@ export class ChatBotSocket {
       this.cores[room].props.socket.disconnect();
       delete this.cores[room];
     }
+    console.log(
+      'ChatbotSocket.deleteCore room: ',
+      room,
+      Object.keys(this.cores)
+    );
   }
   async onConnection(socket: Socket) {
     console.log('ChatBotSocket.onConnection.auth', socket.handshake.auth);
@@ -55,8 +60,6 @@ export class ChatBotSocket {
           `ChatBotSocket.onConnection core for room $\{socketCore.props.chat.room} already exists, will reset`
         );
         this.deleteCore(socketCore.props.chat.room);
-        // this.cores[socketCore.props.chat.room].props.socket.disconnect();
-        // delete this.cores[socketCore.props.chat.room];
       }
 
       this.cores[socketCore.props.chat.room] = socketCore;
@@ -64,7 +67,7 @@ export class ChatBotSocket {
       // init core
       this.cores[socketCore.props.chat.room].props.socket.on(
         'disconnect',
-        this.onSocketDisconnect.bind(this)
+        this.deleteCore.bind(this, socketCore.props.chat.room)
       );
       await this.cores[socketCore.props.chat.room].init();
     } catch (e) {

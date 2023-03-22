@@ -5,7 +5,6 @@ export const findUserById = async (
   userId: number
 ): Promise<UserModel> => {
   const url = baseUrl + '/auth/users/' + userId;
-  console.log('findUserById', url, userId);
   const res = await fetch(url, {
     method: 'GET',
   });
