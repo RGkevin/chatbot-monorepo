@@ -10,102 +10,89 @@ import process from 'process';
 import { ChatBotService } from './chatbot.service';
 import { messagesStore } from '../store';
 import { API_SERVER } from '../constants';
+import { ChatbotCore } from './chatbotCore';
 
 export class ChatBotSocket {
   constructor(io: Server, httpServer: http.Server) {
     this.io = io;
     this.httpServer = httpServer;
-    this.service = new ChatBotService();
+    // this.service = new ChatBotService();
 
-    this.setup();
+    // this.setup();
   }
 
-  private service: ChatBotService;
+  private cores: Record<string, ChatbotCore> = {};
+  // private service: ChatBotService;
   public httpServer: http.Server;
   public io: Server;
-  public chat?: ChatModel;
-  public user?: UserModel;
-  public socket?: Socket;
+  // public chat?: ChatModel;
+  // public user?: UserModel;
+  // public socket?: Socket;
 
   listen() {
     this.httpServer.listen(process.env.PORT || 5001, () => {
       console.log('listening on *:', process.env.PORT || 5001);
     });
+
+    this.io.on('connection', this.onConnection.bind(this));
   }
-  setup() {
-    if (!this.socket) {
-      this.io.on('connection', this.onConnection.bind(this));
+
+  deleteCore(room: string) {
+    if (this.cores[room]) {
+      this.cores[room].props.socket.disconnect();
+      delete this.cores[room];
+    }
+  }
+  async onConnection(socket: Socket) {
+    console.log('ChatBotSocket.onConnection.auth', socket.handshake.auth);
+
+    // setup socket core
+    try {
+      const socketCore = await this.setupCore(socket);
+
+      if (this.cores[socketCore.props.chat.room]) {
+        console.warn(
+          `ChatBotSocket.onConnection core for room $\{socketCore.props.chat.room} already exists, will reset`
+        );
+        this.deleteCore(socketCore.props.chat.room);
+        // this.cores[socketCore.props.chat.room].props.socket.disconnect();
+        // delete this.cores[socketCore.props.chat.room];
+      }
+
+      this.cores[socketCore.props.chat.room] = socketCore;
+
+      // init core
+      this.cores[socketCore.props.chat.room].props.socket.on(
+        'disconnect',
+        this.onSocketDisconnect.bind(this)
+      );
+      await this.cores[socketCore.props.chat.room].init();
+    } catch (e) {
+      console.error('ChatBotSocket.onConnect ERROR', e);
+      socket.disconnect();
+    }
+  }
+
+  async setupCore(socket: Socket): Promise<ChatbotCore> {
+    const chat = ChatModel.fromPlain(JSON.parse(socket.handshake.auth.token));
+
+    if (!socket.rooms.has(chat.room)) {
+      const user = await findUserById(API_SERVER, chat.userId);
+
+      return new ChatbotCore({
+        socket,
+        chat,
+        user,
+        io: this.io,
+      });
     } else {
-      console.log(
-        `ChatBotSocket.setup socket ${this.socket} already connected`
+      throw new Error(
+        `ChatBotSocket.join socket ${socket.id} already in room ${chat.room}`
       );
     }
   }
 
-  onConnection(socket: Socket) {
-    console.log('ChatBotSocket.onConnection');
-    this.socket = socket;
-
-    // setup socket events
-    this.setupSocket();
-  }
-
-  setupSocket() {
-    this.socket?.on('setup:room', this.onSetupRoom.bind(this));
-    this.socket?.on('user:msg', this.onUserMsg.bind(this));
-  }
-
-  async onSetupRoom(plainChat) {
-    // load and verify plainChat
-    this.chat = ChatModel.fromPlain(plainChat);
-
-    // join room
-    if (!this.socket.rooms.has(this.chat.room)) {
-      this.user = await findUserById(API_SERVER, this.chat.userId);
-
-      console.log('ChatBotSocket.onSetupRoom', this.user.name, this.chat.room);
-      this.socket.join(this.chat.room);
-
-      // init conversation
-      await this.init();
-    } else {
-      console.log(
-        `ChatBotSocket.join socket ${this.socket.id} already in room ${this.chat.room}`
-      );
-    }
-  }
-
-  async onUserMsg(plainMessage: Record<string, unknown>) {
-    const userMsg = MessageModel.fromPlain(plainMessage);
-    console.log('ChatBotSocket.onUserMsg', userMsg);
-
-    // get Bot output
-    const output = await this.service.getOutput(userMsg, this.chat, this.user);
-    await this.sendMsg(output);
-  }
-
-  async sendMsg(content: string) {
-    const msgToSend = MessageModel.fromPlain({
-      userId: this.chat.userId,
-      chatId: this.chat.id,
-      content,
-    });
-
-    this.io.to(this.chat.room).emit('server:msg', msgToSend.toPlain());
-  }
-
-  async init() {
-    // start conversation
-    const greetingsGenerator = messagesStore[1];
-    await this.sendMsg(
-      greetingsGenerator.toContent({
-        chat: this.chat,
-        user: this.user,
-      })
-    );
-  }
-
-  disconnect() {
-    this.socket.disconnect();
+  async onSocketDisconnect(some) {
+    console.log('onSocketDisconnect', some);
   }
 }

@@ -10,6 +10,9 @@ export const findUserById = async (
     method: 'GET',
   });
   console.log('res ok', res.ok);
+  if (!res.ok) {
+    throw new Error(`Error finding user ${userId}`);
+  }
 
   return UserModel.fromPlain(await res.json());
 };

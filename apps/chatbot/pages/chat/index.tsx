@@ -19,14 +19,19 @@ export default function Chat({ botServer, plainChat }: ChatProps) {
 
   useEffect(() => {
     if (window && !socket) {
-      const newSocket = io(botServer);
+      const newSocket = io(botServer, {
+        auth: {
+          // use chat model as auth token
+          token: JSON.stringify(plainChat),
+        },
+      });
       setSocket(newSocket);
     }
 
     return () => {
       socket && socket.disconnect();
     };
-  }, [botServer, socket]);
+  }, [botServer, plainChat, socket]);
 
   return (
     <div className={styles['container']}>

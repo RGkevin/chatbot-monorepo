@@ -3,7 +3,7 @@ import { ChatModel, MessageModel, UserModel } from '@chatbot/api-client';
 import { messagesStore } from '../store';
 
 export class ChatBotService {
-  async getOutput(
+  static async getOutput(
     inputMsg: MessageModel,
     chat: ChatModel,
     user: UserModel
@@ -16,7 +16,7 @@ export class ChatBotService {
     });
   }
 
-  selectGenerator(input: MessageModel): MessageGeneratorModel {
+  static selectGenerator(input: MessageModel): MessageGeneratorModel {
     const highestGenerator = this.highestGenerator(input.content);
     const selectedGenerator = messagesStore[highestGenerator[0]];
     console.log('ChatBotService.selectGenerator', selectedGenerator);
@@ -24,7 +24,7 @@ export class ChatBotService {
     return selectedGenerator;
   }
 
-  matchesWithGenerators(content: string): [number, number][] {
+  static matchesWithGenerators(content: string): [number, number][] {
     const offset = 1;
 
     return messagesStore
@@ -38,7 +38,7 @@ export class ChatBotService {
       );
   }
 
-  highestGenerator(content: string): [number, number] {
+  static highestGenerator(content: string): [number, number] {
     const generatorsMatches = this.matchesWithGenerators(content);
     console.log(
       'ChatBotService.highestGenerator.generatorsMatches',
